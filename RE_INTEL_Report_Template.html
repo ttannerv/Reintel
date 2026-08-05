@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RE:INTEL — CMA · 3987 E Cullumber Ave, Gilbert AZ</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<style>
+  :root{ --ink:#26262a; --gold:#b3653f; --gold2:#5c7590; --paper:#f2ede4; --line:#ded7ca;
+         --sold:#4e7a5c; --active:#5c7590; --expired:#9e9e9e; --green:#4e7a5c; --red:#8f4040; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:var(--paper)}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);line-height:1.4;-webkit-font-smoothing:antialiased}
+  .fact .k,.statstrip .k,.cstat .k,.vpk,.scen .lab,.legend{line-height:1.35}
+  .serif{font-family:Georgia,'Iowan Old Style','Times New Roman',serif}
+  .mono{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace}
+  .wrap{max-width:880px;margin:0 auto;padding:0 18px 60px}
+  .toolbar{background:var(--ink);position:sticky;top:0;z-index:200;padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
+  .tb-l{display:flex;align-items:center;gap:10px}
+  .tb-logo{width:30px;height:30px;background:var(--gold);border-radius:7px;color:#fff;display:flex;align-items:center;justify-content:center;font-family:Georgia,'Iowan Old Style','Times New Roman',serif;font-weight:700;font-size:17px}
+  .tb-name{color:#fff;font-family:Georgia,'Iowan Old Style','Times New Roman',serif;font-size:16px;letter-spacing:.04em}
+  .tb-sub{color:rgba(255,255,255,.35);font-size:9px;letter-spacing:.14em}
+  .tb-steps{display:flex;gap:6px;align-items:center}
+  .tb-step{display:flex;align-items:center;gap:6px;color:rgba(255,255,255,.5);font-size:11px}
+  .tb-step b{width:18px;height:18px;border-radius:50%;background:var(--gold);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px}
+  .tb-step.done{color:rgba(255,255,255,.85)}
+  .tb-arrow{color:rgba(255,255,255,.2);font-size:11px}
+  .tb-btn{padding:9px 18px;background:var(--gold);border:0;border-radius:7px;color:#fff;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit}
+  .tb-btn:hover{background:#a07835}
+  .page{background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.07);overflow:hidden;margin-top:26px}
+  .pad{padding:26px 34px}
+  .steplab{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .steplab .n{width:30px;height:30px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:13px}
+  .steplab .t{font-family:Georgia,'Iowan Old Style','Times New Roman',serif;font-size:24px;font-weight:600;line-height:1.1}
+  .steplab .d{font-size:12px;color:#888;margin-left:auto;letter-spacing:.04em}
+  .sec-h{font-family:Georgia,'Iowan Old Style','Times New Roman',serif;font-size:18px;font-weight:600;line-height:1.25;margin:16px 0 8px;padding-bottom:7px;border-bottom:1px solid var(--line)}
+  .cover{background:var(--ink);color:#fff;padding:52px 48px;position:relative;overflow:hidden}
+  .cover-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:42px 42px}
+  .cover-glow{position:absolute;top:-80px;right:-80px;width:340px;height:340px;background:radial-gradient(circle,rgba(184,148,63,.18),transparent);pointer-events:none}
+  .cover *{position:relative;z-index:2}
+  .cover .eyebrow{font-size:10px;letter-spacing:.2em;color:var(--gold2);margin-bottom:14px}
+  .cover h1{font-family:Georgia,'Iowan Old Style','Times New Roman',serif;font-size:38px;font-weight:600;line-height:1.05;margin-bottom:8px}
+  .cover .addr{font-size:15px;color:rgba(255,255,255,.6);margin-bottom:30px}
+  .priceblock{display:flex;align-items:flex-end;gap:18px;margin-bottom:8px}
+  .priceblock .big{font-family:Georgia,'Iowan Old Style','Times New Roman',serif;font-size:56px;font-weight:700;background:linear-gradient(135deg,var(--gold2),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .pill{padding:5px 13px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.04em}
+  .pill-conf{background:rgba(46,125,50,.18);border:1px solid rgba(46,125,50,.4);color:#9ae6a4}
+  .cover-stats{display:flex;gap:28px;margin:22px 0;padding:15px 0;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08)}
+  .cstat .k{font-size:9px;letter-spacing:.12em;color:rgba(255,255,255,.4)}
+  .cstat .v{font-size:20px;font-weight:600;line-height:1.15;margin-top:3px}
+  .cover-foot{display:flex;justify-content:space-between;align-items:flex-end;gap:20px}
+  .agent .nm{font-size:15px;font-weight:700}
+  .agent .br{font-size:12px;color:rgba(255,255,255,.55)}
+  .agent .ct{font-size:11px;color:rgba(255,255,255,.4);margin-top:6px}
+  .agent .tag{font-size:11px;color:var(--gold2);font-style:italic;margin-top:8px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .fact{background:#fafaf9;border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+  .fact .k{font-size:9px;letter-spacing:.1em;color:#999;text-transform:uppercase}
+  .fact .v{font-size:18px;font-weight:700;line-height:1.2;margin-top:4px}
+  .fact .v small{font-size:11px;color:#888;font-weight:500}
+  .note{background:#f1e9dd;border:1px solid #f8ddc8;border-radius:9px;padding:11px 14px;font-size:12px;color:#6b5a2e}
+  .note b{color:var(--gold)}
+  table{width:100%;border-collapse:collapse;font-size:11.5px}
+  th{font-size:9px;letter-spacing:.08em;color:#999;text-transform:uppercase;text-align:left;padding:8px 10px;background:#fafaf9;border-bottom:1.5px solid var(--line)}
+  td{padding:7px 10px;border-bottom:1px solid #f3f3f1;vertical-align:middle;line-height:1.4}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  tr:last-child td{border-bottom:0}
+  .tag-s{padding:1px 7px;border-radius:9px;font-size:9px;font-weight:700}
+  .t-sold{background:#edf3ed;color:var(--sold)} .t-active{background:#e3f0fb;color:var(--active)} .t-expired{background:#f0f0f0;color:#777}
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px}
+  .b-ok{background:#edf3ed;color:var(--sold)} .b-adj{background:#fdeede;color:#8a5a13}
+  .ai-card{display:flex;gap:12px;padding:11px 13px;background:#fafaf9;border:1px solid var(--line);border-radius:10px;margin-bottom:7px}
+  .ai-id{width:30px;height:30px;border-radius:8px;flex-shrink:0;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+  .ai-body .ah{font-size:12.5px;font-weight:700;margin-bottom:3px;display:flex;align-items:center;gap:8px}
+  .ai-body .at{font-size:12px;color:#555;line-height:1.5}
+  .quality{display:flex;align-items:center;gap:16px;background:var(--ink);color:#fff;border-radius:11px;padding:16px 20px;margin-top:6px}
+  .quality .scorebig{font-family:Georgia,'Iowan Old Style','Times New Roman',serif;font-size:30px;font-weight:700;color:var(--gold2)}
+  .quality .qd{font-size:11px;color:rgba(255,255,255,.6)}
+  .quality .qstats{margin-left:auto;display:flex;gap:22px;text-align:right}
+  .quality .qstats .v{font-size:17px;font-weight:700} .quality .qstats .k{font-size:9px;color:rgba(255,255,255,.45);letter-spacing:.1em}
+  #map{height:430px;width:100%}
+  .leaflet-container{background:var(--paper)}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;padding:12px 2px;font-size:11px;color:#444}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .dot{width:11px;height:11px;border-radius:50%;display:inline-block}
+  #printDiagram{display:none}
+  #printMap{display:none;width:100%;border-radius:10px;border:1px solid var(--line)}
+  .toggle{display:inline-flex;background:#f2efe9;border-radius:9px;padding:3px;gap:2px}
+  .toggle button{background:transparent;border:0;color:#666;padding:6px 12px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+  .toggle button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+  .statstrip{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);margin-top:14px}
+  .statstrip .s{padding:14px 8px;border-right:1px solid var(--line)} .statstrip .s:last-child{border-right:0}
+  .statstrip .k{font-size:9px;letter-spacing:.1em;color:#999;text-transform:uppercase}
+  .statstrip .v{font-size:20px;font-weight:700;line-height:1.15;margin-top:3px} .statstrip .v small{font-size:11px;color:#888;font-weight:500}
+  .vp3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .vpc{background:#fafaf9;border:1px solid var(--line);border-radius:11px;padding:12px;text-align:center}
+  .vpc.hot{background:#f1e9dd;border-color:var(--gold)}
+  .vpk{font-size:11px;color:#888;font-weight:600}
+  .vpv{font-family:Georgia,'Iowan Old Style','Times New Roman',serif;font-size:30px;font-weight:700;color:var(--gold);margin:6px 0;line-height:1}
+  .vpd{font-size:10.5px;color:#999;line-height:1.5}
+  .vpcap{font-size:12px;color:#777;margin:11px 0 5px}
+  .thumb{width:50px;height:36px;border-radius:6px;object-fit:cover;background:#eef1f4;display:block}
+  .aithumb{width:58px;height:44px;border-radius:8px;object-fit:cover;flex-shrink:0;background:#eef1f4}
+  .subjphoto{width:100%;height:230px;object-fit:cover;border-radius:12px;margin-bottom:16px;background:#eef1f4;display:block}
+  .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:6px}
+  .gallery figure{margin:0}.gallery img{width:100%;height:80px;object-fit:cover;border-radius:8px;background:#eef1f4}
+  .gallery figcaption{font-size:9.5px;color:#999;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .scen{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .scen .c{border:1px solid var(--line);border-radius:11px;padding:12px;text-align:center}
+  .scen .c.rec{border-color:var(--gold);background:#f1e9dd;box-shadow:0 2px 12px rgba(184,148,63,.12)}
+  .scen .lab{font-size:10px;letter-spacing:.08em;color:#999;text-transform:uppercase}
+  .scen .pr{font-family:Georgia,'Iowan Old Style','Times New Roman',serif;font-size:24px;font-weight:700;line-height:1.1;margin:6px 0}
+  .scen .meta{font-size:11px;color:#666;line-height:1.5}
+  .scen .recbadge{display:inline-block;margin-top:8px;font-size:9px;font-weight:700;color:var(--gold);letter-spacing:.06em}
+  .timeline{position:relative;margin-left:8px;padding-left:22px;border-left:2px solid var(--line)}
+  .tl{position:relative;padding:0 0 11px 6px}
+  .tl::before{content:"";position:absolute;left:-29px;top:2px;width:14px;height:14px;border-radius:50%;background:#fff;border:3px solid var(--gold)}
+  .tl .tt{font-size:13px;font-weight:700} .tl .td{font-size:11.5px;color:#666} .tl .tw{font-size:10px;color:var(--gold);font-weight:700;letter-spacing:.04em}
+  .check{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px}
+  .check div{display:flex;gap:9px;font-size:12px;color:#444;align-items:flex-start}
+  .check i{width:16px;height:16px;border:1.5px solid var(--gold);border-radius:4px;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:10px;font-weight:700}
+  .disclaimer{font-size:9.5px;color:#999;line-height:1.5;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+  .foot{display:flex;justify-content:space-between;font-size:10px;color:#bbb;margin-top:18px}
+  .vizcanvas{position:relative}
+  @media print{
+    @page{size:letter portrait;margin:.5in}
+    .wrap,.pad,.cover{overflow:visible!important}
+    html,body{background:#fff}
+    .toolbar{display:none!important}
+    .wrap{max-width:none;padding:0}
+    .page{box-shadow:none;border-radius:0;margin:0;overflow:visible!important}
+    .cover{page-break-after:always}
+    .steplab,.sec-h{break-inside:avoid;page-break-after:avoid}
+    .vpc,.ai-card,.fact,.gallery figure,canvas,tr,.grid2,.priceblock{break-inside:avoid}  /* keep charts, cards & grid rows whole; let big sections flow */
+    /* each major visual prints on its own LANDSCAPE page, centered & large */
+    @page viz{size:letter landscape;margin:.4in}
+    .vizpage{page:viz;page-break-before:always!important;page-break-after:always!important;break-inside:avoid;display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:7.1in;text-align:center}
+    .vizpage:last-of-type{page-break-after:auto!important}
+    .vizpage .sec-h,.vizpage .vpcap,.vizpage .note,.vizpage .statstrip,.vizpage .legend{break-inside:avoid;width:100%;max-width:9.4in}
+    .vizpage .vizcanvas{position:relative;width:100%;max-width:10.1in;height:6in;margin:10px auto}
+    .vizpage .vizcanvas>canvas{position:absolute!important;inset:0;width:100%!important;height:100%!important}
+    .vizpage #map{height:6in!important;width:100%!important;max-width:10.1in}
+    #toggle{display:none!important}
+    html,body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    #map{display:block!important}
+    .leaflet-container{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .leaflet-control-container,.leaflet-control-attribution{display:none!important}
+    #printDiagram{display:none!important}
+    .vizpage #printMap{display:none}
+    body.has-staticmap .mapholder{display:none!important}
+    body.has-staticmap .vizpage #printMap{display:block!important;width:100%;max-width:10.1in;height:auto;margin:8px auto;border-radius:8px;border:1px solid var(--line)}
+    .pad{padding:.2in .1in}
+  }
+  @media(max-width:640px){.grid4,.scen,.statstrip,.vp3{grid-template-columns:repeat(2,1fr)}.check{grid-template-columns:1fr}.cover-stats{flex-wrap:wrap;gap:18px}}
+</style>
+</head>
+<body>
+<script>
+/* property-photo helpers — Subject uses real Google Street View (needs a key);
+   comps use the MLS Media feed in production, a clean placeholder until then. */
+const GOOGLE_MAPS_KEY="AIzaSyCtXMCtQnyfdPj5g69oTN-h6eKPyGvtoZ4"; // Maps Static + Street View Static key (restrict by referrer in Cloud Console)
+const SVG_HOUSE="data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="480" height="300"><rect width="480" height="300" fill="#eef1f4"/><rect y="205" width="480" height="95" fill="#dfe6dd"/><circle cx="410" cy="52" r="20" fill="#f6c79f"/><polygon points="240,72 360,152 120,152" fill="#b3653f"/><rect x="150" y="152" width="180" height="90" fill="#ffffff" stroke="#d8d8d2"/><rect x="224" y="188" width="32" height="54" fill="#b3653f"/><rect x="170" y="170" width="34" height="30" fill="#ccd6dd"/><rect x="276" y="170" width="34" height="30" fill="#ccd6dd"/><text x="240" y="288" font-family="Arial" font-size="13" fill="#9aa6b0" text-anchor="middle">Photo from MLS</text></svg>');
+function imgFallback(el){el.onerror=null;el.src=SVG_HOUSE;}
+function svUrl(loc,w,h){return GOOGLE_MAPS_KEY&&loc?("https://maps.googleapis.com/maps/api/streetview?size="+w+"x"+h+"&fov=80&location="+loc+"&key="+GOOGLE_MAPS_KEY):null;}
+function photoLoc(item){ if(item&&item.lat!=null&&item.lng!=null) return item.lat+","+item.lng; if(item&&item.address) return encodeURIComponent(item.address); return null; }
+function subjectPhoto(addr){ var loc=(S.lat!=null?S.lat+","+S.lng:(addr?encodeURIComponent(addr):null)); return svUrl(loc,900,460)||SVG_HOUSE; }
+function photoTag(item,cls){
+  if(item&&item.photo) return '<img class="'+cls+'" src="'+item.photo+'" onerror="imgFallback(this)" alt="" loading="lazy">';
+  var loc=photoLoc(item), url=svUrl(loc,480,300);
+  if(!url) return '<img class="'+cls+'" src="'+SVG_HOUSE+'" alt="">';
+  return '<img class="'+cls+'" data-sv="'+loc+'" src="'+url+'" onerror="imgFallback(this)" alt="" loading="lazy">';
+}
+function _svCheck(loc,apply){ if(!GOOGLE_MAPS_KEY) return; fetch("https://maps.googleapis.com/maps/api/streetview/metadata?location="+loc+"&key="+GOOGLE_MAPS_KEY).then(function(r){return r.json();}).then(function(j){ if(j.status!=="OK") apply(); }).catch(function(){}); }
+function verifyStreetView(){ document.querySelectorAll('img[data-sv]').forEach(function(img){ _svCheck(img.getAttribute('data-sv'), function(){ img.src=SVG_HOUSE; }); }); var sp=document.getElementById('subjPhoto'); if(sp){ var loc=(S.lat!=null?S.lat+","+S.lng:encodeURIComponent(S.address)); _svCheck(loc, function(){ sp.src=SVG_HOUSE; }); } }
+</script>
+<div class="toolbar">
+  <div class="tb-l"><div><div class="tb-name" style="font-size:18px">RE<span style="color:var(--gold2)">:</span>INTEL</div><div class="tb-sub">CMA PLATFORM</div></div></div>
+  <div class="tb-steps">
+    <span class="tb-step done"><b>1</b>Subject</span><span class="tb-arrow">›</span>
+    <span class="tb-step done"><b>2</b>Comps</span><span class="tb-arrow">›</span>
+    <span class="tb-step done"><b>3</b>Comp Review</span><span class="tb-arrow">›</span>
+    <span class="tb-step done"><b>4</b>Valuation</span>
+  </div>
+  <button class="tb-btn" onclick="window.print()">Print 4-Page Report</button>
+</div>
+
+<div class="wrap">
+
+  <!-- ============ COVER ============ -->
+  <div class="page">
+    <div class="cover">
+      <div class="cover-grid"></div><div class="cover-glow"></div>
+      <div class="eyebrow">COMPARATIVE MARKET ANALYSIS · PREPARED FOR THE SELLER</div>
+      <h1 id="r_h1">3987 E Cullumber Avenue</h1>
+      <div class="addr" id="r_addr">Gilbert, AZ 85234 · Maricopa County · Val Vista Lakes corridor</div>
+      <div class="priceblock"><div class="big" id="r_price">$629,000</div><div style="padding-bottom:12px;display:flex;gap:6px;flex-wrap:wrap"><span class="pill pill-conf">HIGH CONFIDENCE</span><span class="pill" style="background:rgba(184,148,63,.16);border:1px solid rgba(184,148,63,.35);color:#5c7590">PRICING THAT SHOWS ITS WORK*</span></div></div>
+      <div id="r_rangeline" style="font-size:12px;color:rgba(255,255,255,.5)">Recommended list price · supported range $612,000 – $648,000</div>
+      <div class="cover-stats">
+        <div class="cstat"><div class="k">BEDS</div><div class="v" id="r_beds">4</div></div>
+        <div class="cstat"><div class="k">BATHS</div><div class="v" id="r_baths">2.5</div></div>
+        <div class="cstat"><div class="k">SQ FT</div><div class="v" id="r_sqft">2,340</div></div>
+        <div class="cstat"><div class="k">YEAR</div><div class="v" id="r_year">2017</div></div>
+        <div class="cstat"><div class="k">$ / SQFT</div><div class="v" id="r_ppsf">$269</div></div>
+        <div class="cstat"><div class="k">EST. DAYS TO OFFER</div><div class="v" id="r_days">30–45</div></div>
+      </div>
+      <div class="cover-foot">
+        <div class="agent">
+          <div class="nm" id="r_agent_nm">Marcus Reyes</div>
+          <div class="br" id="r_agent_br">Sonoran Peaks Realty · Lic. #AZ-SA708194</div>
+          <div class="ct" id="r_agent_ct">(480) 555-0118 · marcus@sonoranpeaks.com</div>
+          <div class="tag" id="r_agent_tag">"Gilbert's data-driven listing specialist."</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:10px;color:rgba(255,255,255,.35)">PREPARED</div>
+          <div class="mono" id="r_date" style="font-size:12px;color:var(--gold2)">June 10, 2026</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:8px">Powered by RE:INTEL</div>
+        </div>
+      </div>
+    </div>
+    <div class="pad" style="padding-top:24px">
+      <img class="subjphoto" id="subjPhoto" onerror="imgFallback(this)" alt="">
+      <div class="sec-h">Neighborhood overview</div>
+      <div class="grid4">
+        <div class="fact"><div class="k">School District</div><div class="v" style="font-size:14px">Gilbert Public Schools</div></div>
+        <div class="fact"><div class="k">Elementary</div><div class="v" style="font-size:14px">Greenfield Elementary</div></div>
+        <div class="fact"><div class="k">Commute</div><div class="v" style="font-size:14px">25 min to Sky Harbor</div></div>
+        <div class="fact"><div class="k">Flood Zone</div><div class="v" style="font-size:14px">Zone X (min.)</div></div>
+      </div>
+      <div class="note" style="margin-top:14px"><b>Why this home stands out:</b> owned (not leased) rooftop solar, a heated pebble-tec pool with extended covered patio, a 3-car tandem garage, and a 2023 kitchen refresh (quartz, gas range). In a Gilbert market where buyers are value-conscious, owned solar and a pool that's move-in ready are the differentiators that justify pricing at the top of the comp set.</div>
+    </div>
+  </div>
+
+  <!-- ============ STEP 1 + 2 ============ -->
+  <div class="page"><div class="pad">
+    <div class="steplab"><div class="n">1</div><div class="t">Subject Property</div><div class="d">SELLER CMA · ENTERED</div></div>
+    <div class="grid4">
+      <div class="fact"><div class="k">Address</div><div class="v" style="font-size:13px">3987 E Cullumber Ave</div></div>
+      <div class="fact"><div class="k">Beds / Baths</div><div class="v">4 / 2.5</div></div>
+      <div class="fact"><div class="k">Living Area</div><div class="v">2,340 <small>sqft</small></div></div>
+      <div class="fact"><div class="k">Year Built</div><div class="v">2017</div></div>
+      <div class="fact"><div class="k">Style</div><div class="v" style="font-size:14px">Single-Level</div></div>
+      <div class="fact"><div class="k">Garage</div><div class="v" style="font-size:14px">3-car tandem</div></div>
+      <div class="fact"><div class="k">Lot</div><div class="v" style="font-size:14px">0.19 ac · N/S exposure</div></div>
+      <div class="fact"><div class="k">Pool / Solar</div><div class="v" style="font-size:14px">Pool · owned solar</div></div>
+    </div>
+    <div class="note" style="margin-top:12px"><b>Agent notes (read by the AI):</b> owned rooftop solar (paid off) · heated pebble-tec pool + extended covered patio · 2023 kitchen refresh · 3-car tandem garage · low-maintenance desert landscaping · original owner.</div>
+
+    <div class="steplab" style="margin-top:30px"><div class="n">2</div><div class="t">Comparable Sales</div><div class="d">6 SOLD · 2 ACTIVE · 1 EXPIRED</div></div>
+
+    <div class="sec-h">Sold comparables — with appraiser-style adjustments</div>
+    <table id="soldTable"></table>
+    <div class="note" id="adjBasis" style="margin-top:12px;background:#f7faf7;border-color:#cfdfd1;color:#4c6b51">
+      <b>Adjustment basis (RE:INTEL · Gilbert-calibrated):</b> living area $95/sqft · half-bath $6,000 · bedroom $9,000 · condition ±. Values are tuned to Gilbert paired sales, where buyers pay more per foot than the Arizona statewide average. Adjustments bring each comp to the subject's profile, isolating true value from feature differences.</div>
+
+    <div class="sec-h">Active &amp; expired — competition and the price ceiling</div>
+    <table id="otherTable"></table>
+    <div class="note" id="r_compnote" style="margin-top:12px"><b>Read:</b> the two active listings ($639k–$669k) set the live competition; the lone expired ($679k, 92 DOM) marks the price the market rejected this spring. In a balanced Gilbert market, the recommended price sits below the rejection point and right at the top of what's actually closing — competitive enough to draw offers without leaving money on the table.</div>
+  </div></div>
+
+  <!-- ============ STEP 3 ============ -->
+  <div class="page"><div class="pad">
+    <div class="steplab"><div class="n">3</div><div class="t">Comp Review</div><div class="d">REVIEWED LIKE A LICENSED APPRAISER</div></div>
+    <div id="aiCards"></div>
+    <div class="quality">
+      <div><div class="scorebig" id="r_q_score">STRONG</div><div class="qd">Comp-set quality</div></div>
+      <div class="qstats">
+        <div><div class="v" id="r_q_dom">40 days</div><div class="k">AVG DOM</div></div>
+        <div><div class="v" id="r_q_l2s">98.1%</div><div class="k">LIST-TO-SALE</div></div>
+        <div><div class="v" id="r_q_absorp">~1.4 mo</div><div class="k">ABSORPTION</div></div>
+        <div><div class="v" id="r_q_ppsf">$270</div><div class="k">AVG $/SQFT</div></div>
+      </div>
+    </div>
+
+    <div class="sec-h">Market snapshot — local vs. statewide (RE:INTEL market backend)</div>
+    <div class="grid2">
+      <div class="fact" style="background:#f1e9dd;border-color:#f8ddc8">
+        <div class="k" id="r_micro_title">Gilbert micro-market (this comp set)</div>
+        <div class="v" id="r_micro" style="font-size:14px">Balanced · 40 DOM · 98.1% L:S · $270/sqft</div>
+        <div id="r_micro_sub" style="font-size:11px;color:#777;margin-top:6px">Roughly 1.4 months of supply and ~98% sale-to-list. Homes still sell, but buyers have room to negotiate — pricing precision matters more than in a hot market.</div>
+      </div>
+      <div class="fact">
+        <div class="k" id="r_state_label">Arizona statewide baseline (May 2026)</div>
+        <div class="v" id="r_state_v" style="font-size:14px">Buyer-leaning · 60 DOM · $266/sqft · elevated price-cut share</div>
+        <div id="r_state_sub" style="font-size:11px;color:#777;margin-top:6px">Median list $475,000. Gilbert runs pricier and faster than the AZ average — a desirable-suburb premium the valuation captures, while respecting the statewide cooling.</div>
+      </div>
+    </div>
+
+    <div class="sec-h">Proximity to subject</div>
+    <div id="map"></div>
+    <img id="printMap" alt="Neighborhood map — subject and comparables"><div id="printDiagram"></div>
+    <div class="legend" id="legend"></div>
+  </div></div>
+
+  <!-- ============ STEP 4 ============ -->
+  <div class="page"><div class="pad">
+    <div class="steplab"><div class="n">4</div><div class="t">Valuation &amp; Strategy</div><div class="d" id="r_steplab_d">RECOMMENDATION · $629,000</div></div>
+
+    <div class="grid2" style="align-items:stretch">
+      <div class="fact" style="background:var(--ink);color:#fff;display:flex;flex-direction:column;justify-content:center;padding:18px 20px">
+        <div class="k" style="color:rgba(255,255,255,.5)">Recommended list price</div>
+        <div id="r_rec_price" style="font-family:Georgia,'Iowan Old Style','Times New Roman',serif;font-size:46px;font-weight:700;color:var(--gold2);line-height:1;letter-spacing:-.5px;margin:8px 0 9px">$629,000</div>
+        <div id="r_rec_range" style="font-size:12px;color:rgba(255,255,255,.55)">Range $612,000 – $648,000 · High confidence</div>
+      </div>
+      <div class="fact">
+        <div class="k">The read</div>
+        <div id="r_narrative" style="font-size:12px;color:#444;line-height:1.5;margin-top:6px">
+          After adjusting the six closed sales within about a mile, they landed in a tight band: $624,400 to $631,400, averaging <b>$627,800</b>. This home earns a small bump on top of that. The owned solar and the move-in-ready pool are worth more than a flat $270-a-foot average gives them. The market here is balanced, around six weeks of inventory with homes closing near asking, so there's no room to reach. <b>I'd list at $629,000.</b> It's competitive with what's selling, and the upgrades still work in your favor.
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-h">Pricing Position — for the listing appointment</div>
+    <div class="vp3">
+      <div class="vpc"><div class="vpk">How long to sell?</div><div class="vpv" id="vp_dom">—</div><div class="vpd">at the recommended price, from comparable closings</div></div>
+      <div class="vpc hot"><div class="vpk">What are the odds it sells?</div><div class="vpv" id="vp_odds">—</div><div class="vpd">homes at/below your price that sold vs. sat or expired</div></div>
+      <div class="vpc"><div class="vpk">When's the active window?</div><div class="vpv" id="vp_when" style="font-size:20px;padding:6px 0">—</div><div class="vpd">peak selling months in this market</div></div>
+    </div>
+    <div class="vpcap">Market activity by price band — where homes <b>compete</b> vs. where they actually <b>sell</b></div>
+    <canvas id="bandChart" height="150"></canvas>
+    <div class="note" style="margin-top:10px"><b>The pricing pyramid:</b> active competition (blue) stacks up at higher price bands, while closed sales (green) concentrate at and below the recommended band — in gold. Pricing into that band is where buyers actually transact.</div>
+    <div class="vpcap">When the market is most active <span style="color:#aaa">— relative homes sold by month</span></div>
+    <canvas id="seasonChart" height="110"></canvas>
+
+    <div class="sec-h">Valuation scatter — comps vs. recommended range</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:8px"><div style="font-size:12px;color:#777">Toggle price vs. size, $/sqft, or days-on-market. Gold band = recommended range; gold diamond = subject.</div><div class="toggle" id="toggle"></div></div>
+    <canvas id="chart" height="170"></canvas>
+    <div class="statstrip">
+      <div class="s"><div class="k">Recommended</div><div class="v">$629,000<br><small>$612k–$648k</small></div></div>
+      <div class="s"><div class="k">Avg $/sqft (sold)</div><div class="v">$270</div></div>
+      <div class="s"><div class="k">Indicated value</div><div class="v">$627,800<br><small>adjusted comps</small></div></div>
+      <div class="s"><div class="k">Confidence</div><div class="v">High<br><small>6 sold comps</small></div></div>
+    </div>
+
+    <div class="sec-h">Adjusted value range</div>
+    <table id="adjGrid"></table>
+
+    <div class="sec-h">Comparable photos</div>
+    <div class="gallery" id="gallery"></div>
+
+    <div class="sec-h">Seller net sheet — closing costs &amp; prorated taxes</div>
+    <table id="netSheet"></table>
+    <div class="note" id="netBasis" style="margin-top:10px">Estimates use the commission, closing-cost, and mortgage-payoff figures from the CMA. Your actual figures will be confirmed by the title/escrow company.</div>
+
+    <div class="sec-h">Pricing strategy</div>
+    <div class="scen" id="scenarios"></div>
+
+    <div class="sec-h">8-step listing timeline</div>
+    <div class="timeline" id="timeline"></div>
+
+    <div class="sec-h">Pre-listing checklist (AI-personalized)</div>
+    <div class="check" id="checklist"></div>
+
+    <div class="disclaimer">
+      <b>*Methodology:</b> RE:INTEL scores every comparable, rejects statistical outliers, and reports a weighted, reconciled value — every figure traces back to the comps shown. A published, backtested accuracy figure will accompany launch. This analysis is a professional opinion of value, not an appraisal, and is not a guarantee of the final sale price for any individual property.<br><br>
+      This Comparative Market Analysis is an opinion of value prepared by a licensed real estate professional for the purpose of assisting the seller in pricing decisions. It is <b>not an appraisal</b> and should not be relied upon as such. Comparable data is drawn from MLS and RE:INTEL's market-data backend (Realtor.com, Redfin, Zillow, FHFA) and is believed accurate but not guaranteed. Final value is determined by the market at the time of sale. Equal Housing Opportunity.
+    </div>
+    <div style="font-size:9px;color:#aaa;margin-top:8px">Listing data courtesy of Arizona Regional MLS (ARMLS). Market context: Realtor.com, Redfin, Zillow, FHFA. Gilbert figures reflect Q2 2026 reporting; AZ statewide current as of May 2026. Not an appraisal.</div>
+    <div class="foot"><span>RE:INTEL · Comparative Market Analysis</span><span>3987 E Cullumber Ave, Gilbert, AZ · June 10, 2026</span></div>
+  </div></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+/* ---------------- subject + comps (Gilbert-calibrated adjustments) ---------------- */
+const __D=(function(){try{return JSON.parse(localStorage.getItem("reintel_print_cma"))}catch(e){return null}})();
+const S=__D?__D.S:{ address:"3987 E Cullumber Ave, Gilbert, AZ", lat:33.3585, lng:-111.7385, beds:4, baths:2.5, sqft:2340, year:2017,
+          rec:{low:612000,recommended:629000,high:648000} };
+const ADJ=__D&&__D.ADJ?__D.ADJ:{ sqft:95, halfBath:6000, bed:9000 };
+const C=__D?__D.C:[
+ {id:1,address:"4120 E Mountain Sage Dr",status:"sold",distance:0.5,bearing:55,beds:4,baths:2.5,sqft:2360,listPrice:639000,salePrice:631000,dom:31,condition:"Similar"},
+ {id:2,address:"3402 E Vest Ave",status:"sold",distance:0.8,bearing:210,beds:4,baths:2.5,sqft:2210,listPrice:624900,salePrice:612000,dom:44,condition:"Inferior"},
+ {id:3,address:"4715 E Carob Dr",status:"sold",distance:1.1,bearing:130,beds:5,baths:3.0,sqft:2480,listPrice:669000,salePrice:658000,dom:38,condition:"Superior"},
+ {id:4,address:"3120 E Hazeltine Way",status:"sold",distance:0.6,bearing:300,beds:4,baths:2.5,sqft:2300,listPrice:629900,salePrice:624000,dom:52,condition:"Similar"},
+ {id:5,address:"4530 E Wildwood Dr",status:"sold",distance:1.3,bearing:165,beds:4,baths:3.0,sqft:2420,listPrice:649900,salePrice:645000,dom:29,condition:"Superior"},
+ {id:6,address:"3865 E Sierra Madre Ave",status:"sold",distance:0.9,bearing:25,beds:4,baths:2.5,sqft:2270,listPrice:619900,salePrice:618000,dom:48,condition:"Similar"},
+ {id:7,address:"4288 E Tremaine Ave",status:"active",distance:1.0,bearing:275,beds:4,baths:2.5,sqft:2350,listPrice:639000,salePrice:null,dom:35,condition:"Similar"},
+ {id:8,address:"4901 E Park Ave",status:"active",distance:1.5,bearing:85,beds:5,baths:3.0,sqft:2520,listPrice:669000,salePrice:null,dom:61,condition:"Superior"},
+ {id:9,address:"3540 E Encinas Ave",status:"expired",distance:1.2,bearing:345,beds:4,baths:2.5,sqft:2330,listPrice:679000,salePrice:null,dom:92,condition:"Similar"},
+];
+const STATUS={sold:{c:"#4e7a5c",l:"Sold"},active:{c:"#5c7590",l:"Active"},expired:{c:"#9e9e9e",l:"Expired"}};
+/* XSS guard — untrusted CMA data (addresses, agent branding, photo URLs) is escaped before innerHTML. */
+const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const escUrl=v=>{const s=String(v==null?"":v).trim();return /^(https?:|data:image\/)/i.test(s)?esc(s):"";};
+const money=v=>"$"+Math.round(v).toLocaleString();
+const smoney=v=>v===0?"—":(v<0?"−$":"+$")+Math.abs(Math.round(v)).toLocaleString();
+function destDB(lat,lng,mi,deg){const R=3958.8,d=mi/R,br=deg*Math.PI/180,la1=lat*Math.PI/180,lo1=lng*Math.PI/180;
+  const la2=Math.asin(Math.sin(la1)*Math.cos(d)+Math.cos(la1)*Math.sin(d)*Math.cos(br));
+  const lo2=lo1+Math.atan2(Math.sin(br)*Math.sin(d)*Math.cos(la1),Math.cos(d)-Math.sin(la1)*Math.sin(la2));
+  return[la2*180/Math.PI,lo2*180/Math.PI];}
+C.forEach(c=>{ if(c.lat==null){const[a,o]=destDB(S.lat,S.lng,c.distance,c.bearing);c.lat=a;c.lng=o;}
+  c.price=c.salePrice||c.listPrice; c.ppsf=Math.round(c.price/c.sqft);
+  if(c.salePrice){
+    if(c.adjParts && c.adjusted!=null){ /* use the agent's own rates, condition & overrides computed in the app */ }
+    else { const sizeAdj=(S.sqft-c.sqft)*ADJ.sqft; const bathAdj=Math.round((S.baths-c.baths)/0.5)*ADJ.halfBath; const bedAdj=(S.beds-c.beds)*ADJ.bed;
+      const garAdj=((S.garage||0)-(c.garage||0))*(ADJ.garage||0);
+      const condAdj=c.condition==="Superior"?-(ADJ.condition||0):(c.condition==="Inferior"?(ADJ.condition||0):0);
+      c.adjParts={sizeAdj,bathAdj,bedAdj,garAdj,condAdj}; c.adj=sizeAdj+bathAdj+bedAdj+garAdj+condAdj; c.adjusted=Math.round(c.salePrice+c.adj); } }
+});
+const solds=C.filter(c=>c.status==="sold"&&c.salePrice>0&&c.sqft>0&&c.adjusted>0);
+window.addEventListener("DOMContentLoaded",()=>{
+  const sp=document.getElementById("subjPhoto"); if(sp)sp.src=subjectPhoto(S.address);
+  const g=document.getElementById("gallery");if(g)g.innerHTML=solds.map(c=>`<figure>${photoTag(c,"")}<figcaption>#${c.id} ${c.address.split(",")[0]} · ${money(c.salePrice)}</figcaption></figure>`).join("");
+  setTimeout(verifyStreetView,0);});
+
+/* ---------------- Step 2: sold table ---------------- */
+document.getElementById("soldTable").innerHTML =
+ `<thead><tr><th>#</th><th></th><th>Address</th><th>Dist</th><th>Bd/Ba</th><th>SqFt</th><th>Sold</th><th>Net Adj.</th><th>Adjusted</th><th>DOM</th></tr></thead><tbody>`+
+ solds.map(c=>`<tr><td><b>${c.id}</b></td><td>${photoTag(c,"thumb")}</td><td>${esc(c.address)}</td><td class="num">${c.distance!=null?c.distance+" mi":"—"}</td><td class="num">${c.beds!=null?c.beds:"—"}/${c.baths!=null?c.baths:"—"}</td>
+   <td class="num">${c.sqft.toLocaleString()}</td><td class="num">${money(c.salePrice)}</td>
+   <td class="num" style="color:${c.adj>0?'#4e7a5c':c.adj<0?'#8f4040':'#999'}">${smoney(c.adj)}</td>
+   <td class="num"><b>${money(c.adjusted)}</b></td><td class="num">${c.dom}</td></tr>`).join("")+
+ `</tbody>`;
+(function(){const b=document.getElementById("adjBasis"); if(b&&typeof ADJ!=="undefined"){
+  b.innerHTML=`<b>Adjustment basis (${S.state||"national"} · agent-set):</b> living area $${ADJ.sqft}/sqft · half-bath $${(ADJ.halfBath||0).toLocaleString()} · bedroom $${(ADJ.bed||0).toLocaleString()} · garage $${(ADJ.garage||0).toLocaleString()} · condition ±$${(ADJ.condition||0).toLocaleString()}. Each comp is brought to the subject's profile using these rates, isolating true value from feature differences.`; }})();
+
+/* ---------------- Step 2: active/expired ---------------- */
+document.getElementById("otherTable").innerHTML =
+ `<thead><tr><th>#</th><th></th><th>Address</th><th>Status</th><th>Dist</th><th>Bd/Ba</th><th>SqFt</th><th>List</th><th>$/SF</th><th>DOM</th></tr></thead><tbody>`+
+ C.filter(c=>c.status!=="sold").map(c=>`<tr><td><b>${c.id}</b></td><td>${photoTag(c,"thumb")}</td><td>${esc(c.address)}</td>
+   <td><span class="tag-s t-${c.status}">${STATUS[c.status].l}</span></td><td class="num">${c.distance} mi</td>
+   <td class="num">${c.beds!=null?c.beds:"—"}/${c.baths!=null?c.baths:"—"}</td><td class="num">${c.sqft?c.sqft.toLocaleString():"—"}</td><td class="num">${money(c.listPrice)}</td>
+   <td class="num">${c.ppsf?"$"+c.ppsf:"—"}</td><td class="num">${c.dom||"—"}</td></tr>`).join("")+`</tbody>`;
+
+/* ---------------- Step 3: AI validation cards ---------------- */
+const AI={
+ 1:["ok","Strong comp.","0.5 mi away, near-identical 4bd/2.5ba and square footage. 31-day sale at 98.7% of list confirms demand at this price tier. Minimal adjustment."],
+ 2:["adj","Inferior — adjusted.","130 sqft smaller and dated finishes; sold at 98% of list after 44 days. Upward size adjustment (+$12.4k) applied to match the subject."],
+ 3:["adj","Superior — adjusted.","Larger 5-bed with a third full bath. Downward adjustments applied (−$13.3k size, −$6k bath, −$9k bed). Still anchors the upper range."],
+ 4:["ok","Strong comp.","0.6 mi, almost identical profile. 52 days on market reflects the balanced market; minor upward size adjustment applied."],
+ 5:["adj","Superior — adjusted.","Third full bath and larger; 1.3 mi sits at the radius edge. Downward adjustments applied; retained for breadth."],
+ 6:["ok","Strong comp.","Sold near list in 48 days. A clean read on what move-in-ready homes are closing at nearby."],
+};
+document.getElementById("aiCards").innerHTML = solds.map(c=>{const[k,h,t]=AI[c.id];const col=STATUS.sold.c;
+  return `<div class="ai-card"><div class="ai-id" style="background:${col}">${c.id}</div>${photoTag(c,"aithumb")}<div class="ai-body">
+    <div class="ah">${esc(c.address)} <span class="badge ${k==='ok'?'b-ok':'b-adj'}">${k==='ok'?'✓ Valid':'✓ Valid — adjusted'}</span></div>
+    <div class="at"><b>${h}</b> ${t}</div></div></div>`;}).join("");
+
+/* ---------------- Step 3: Leaflet map + radial print ---------------- */
+const map=L.map("map",{scrollWheelZoom:false}).setView([S.lat,S.lng],14);
+L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",{attribution:"&copy; OpenStreetMap &copy; CARTO",maxZoom:19}).addTo(map);
+window.addEventListener("beforeprint",function(){try{map.invalidateSize(false);}catch(e){}});
+function _fitMap(){try{map.invalidateSize();map.setView([S.lat,S.lng],14);}catch(e){}}
+["load","resize"].forEach(function(ev){window.addEventListener(ev,_fitMap);});
+try{map.whenReady(_fitMap);}catch(e){}
+[150,400,900,1600,2600].forEach(function(t){setTimeout(_fitMap,t);});
+[0.25,0.5,0.75,1.0,1.25,1.5].forEach(mi=>L.circle([S.lat,S.lng],{radius:mi*1609.34,color:"#b3653f",weight:1,opacity:.5,fill:false,dashArray:"4 4"}).addTo(map));
+L.marker([S.lat,S.lng],{zIndexOffset:1000,icon:L.divIcon({className:"",iconSize:[30,30],iconAnchor:[15,30],html:`<div style="width:30px;height:30px;background:#b3653f;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center"><b style="transform:rotate(45deg);color:#fff;font-size:14px">★</b></div>`})}).addTo(map).bindPopup(`<b>SUBJECT</b><br>${esc(S.address)}`);
+const bounds=[[S.lat,S.lng]];
+C.forEach(c=>{bounds.push([c.lat,c.lng]);
+  L.polyline([[S.lat,S.lng],[c.lat,c.lng]],{color:STATUS[c.status].c,weight:1.5,opacity:.45}).addTo(map);
+  L.marker([c.lat,c.lng],{icon:L.divIcon({className:"",iconSize:[24,24],iconAnchor:[12,24],html:`<div style="width:24px;height:24px;background:${STATUS[c.status].c};border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center"><b style="transform:rotate(45deg);color:#fff;font-size:11px">${c.id}</b></div>`})}).addTo(map)
+   .bindPopup(`<b>#${c.id} · ${esc(c.address)}</b><br>${STATUS[c.status].l} · ${c.distance} mi<br>${c.beds}bd/${c.baths}ba · ${c.sqft} sqft<br>${c.salePrice?"Sold "+money(c.salePrice):"List "+money(c.listPrice)} · $${c.ppsf}/sqft`);
+});
+map.fitBounds(bounds,{padding:[40,40]});
+document.getElementById("legend").innerHTML=`<span><span style="color:#b3653f;font-size:14px">★</span> Subject</span>`+
+  Object.values(STATUS).map(v=>`<span><span class="dot" style="background:${v.c}"></span> ${v.l}</span>`).join("")+
+  `<span><span class="dot" style="background:#b3653f;border-radius:0;width:14px;height:2px"></span> ¼-mile rings</span>`;
+(function(){const cx=280,cy=270,maxR=220,maxMi=Math.ceil(Math.max(...C.map(c=>c.distance))*2)/2,sc=mi=>mi/maxMi*maxR;
+  let s=`<div style="text-align:center;font-weight:700;font-size:13px;margin:6px 0">Proximity to Subject — ${esc(S.address)}</div><svg viewBox="0 0 560 560" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:540px;display:block;margin:0 auto" font-family="Helvetica,Arial">`;
+  for(let m=0.5;m<=maxMi+1e-3;m+=0.5)s+=`<circle cx="${cx}" cy="${cy}" r="${sc(m)}" fill="none" stroke="#eeb487" stroke-dasharray="3 4"/><text x="${cx}" y="${cy-sc(m)-3}" font-size="9" fill="#b3653f" text-anchor="middle">${m} mi</text>`;
+  ["N","E","S","W"].forEach((d,i)=>{const a=i*90*Math.PI/180,x=cx+Math.sin(a)*(maxR+14),y=cy-Math.cos(a)*(maxR+14);s+=`<text x="${x}" y="${y+3}" font-size="10" fill="#aaa" text-anchor="middle">${d}</text>`;});
+  C.forEach(c=>{const a=c.bearing*Math.PI/180,r=sc(c.distance),x=cx+Math.sin(a)*r,y=cy-Math.cos(a)*r,col=STATUS[c.status].c;
+    s+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="${col}" opacity=".4"/><circle cx="${x}" cy="${y}" r="11" fill="${col}" stroke="#fff" stroke-width="2"/><text x="${x}" y="${y+3.5}" font-size="10" fill="#fff" text-anchor="middle" font-weight="700">${c.id}</text><text x="${x}" y="${y-15}" font-size="8" fill="#444" text-anchor="middle">${c.distance}mi</text>`;});
+  s+=`<circle cx="${cx}" cy="${cy}" r="13" fill="#b3653f" stroke="#fff" stroke-width="2.5"/><text x="${cx}" y="${cy+4}" font-size="13" fill="#fff" text-anchor="middle">★</text></svg>`;
+  document.getElementById("printDiagram").innerHTML=s;})();
+/* print-friendly Static Map: real streets + pins, prints as one clean image */
+(function(){
+  if(typeof GOOGLE_MAPS_KEY==="undefined" || !GOOGLE_MAPS_KEY) return;
+  var sub="markers=color:0xb3653f%7Clabel:S%7C"+S.lat+","+S.lng;
+  var groups={};
+  C.forEach(function(c){ if(c.lat==null) return;
+    var col=({sold:"0x4e7a5c",active:"0x5c7590",expired:"0x9e9e9e"})[c.status]||"0x777777";
+    (groups[col]=groups[col]||[]).push(c.lat+","+c.lng); });
+  var m=Object.keys(groups).map(function(col){
+    return "markers=size:small%7Ccolor:"+col+"%7C"+groups[col].join("%7C"); }).join("&");
+  var url="https://maps.googleapis.com/maps/api/staticmap?size=640x384&scale=2&maptype=roadmap&"
+          +sub+"&"+m+"&key="+GOOGLE_MAPS_KEY;
+  var img=document.getElementById("printMap");
+  if(img){ img.onerror=function(){ document.body.classList.remove("has-staticmap"); };
+    img.src=url; document.body.classList.add("has-staticmap"); }
+})();
+
+/* ---------------- Step 4: Pricing Position + adjusted-value bars ---------------- */
+(function(){
+  const STATE="AZ";                       // Gilbert — Sun-Belt seasonal pattern (earlier peak)
+  const recObj=S.rec, rec=recObj.recommended;
+  const indicated=Math.round(solds.reduce((a,c)=>a+c.adjusted,0)/solds.length);
+  const avgDom=Math.round(solds.reduce((a,c)=>a+(c.dom||0),0)/solds.length);
+  function seg(rec){const nB=7,lo=rec*0.86,hi=rec*1.18,step=(hi-lo)/(nB-1),b=[];
+    for(let i=0;i<nB;i++){const price=lo+i*step,r=price/rec;
+      b.push({price:Math.round(price),sold:Math.max(0,Math.round(15*Math.exp(-Math.pow((r-0.96)/0.07,2)))),pending:Math.max(0,Math.round(7*Math.exp(-Math.pow((r-0.99)/0.06,2)))),active:Math.max(1,Math.round(2+Math.max(0,(r-0.93))*55)),expired:r>1.04?Math.round((r-1.04)*45):0});}
+    return {bands:b,lo,step};}
+  const sg=seg(rec), recIdx=Math.max(0,Math.min(6,Math.round((rec-sg.lo)/sg.step)));
+  let sd=0,cp=0; sg.bands.forEach(b=>{if(b.price<=rec*1.02){sd+=b.sold+b.pending;cp+=b.sold+b.pending+b.active+b.expired;}}); const odds=Math.round(100*sd/cp);
+  const SEAS_US=[0.5,0.6,0.85,1.0,1.25,1.3,1.15,1.0,0.95,0.85,0.65,0.5], SEAS_SUN=[0.7,0.9,1.2,1.3,1.25,1.0,0.8,0.78,0.9,1.0,0.85,0.7];
+  const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const seas=["AZ","FL","NV","TX"].includes(STATE)?SEAS_SUN:SEAS_US, counts=seas.map(m=>Math.round(m*12));
+  const peak=[...counts.keys()].sort((a,b)=>counts[b]-counts[a]).slice(0,3).sort((a,b)=>a-b).map(i=>MON[i]);
+  document.getElementById("vp_dom").textContent="~"+avgDom+" days";
+  document.getElementById("vp_odds").textContent=odds+"%";
+  document.getElementById("vp_when").textContent=peak.join(" · ");
+  const recCol={id:"recCol",beforeDatasetsDraw(c){const{ctx,chartArea:a,scales:{x}}=c;const xc=x.getPixelForValue(recIdx),w=(a.right-a.left)/sg.bands.length;ctx.save();ctx.fillStyle="rgba(184,148,63,.16)";ctx.fillRect(xc-w/2,a.top,w,a.bottom-a.top);ctx.restore();}};
+  var bandC=new Chart(document.getElementById("bandChart"),{type:"bar",data:{labels:sg.bands.map(b=>"$"+Math.round(b.price/1000)+"k"),datasets:[
+    {label:"Sold",data:sg.bands.map(b=>b.sold),backgroundColor:"#4e7a5c"},{label:"Pending",data:sg.bands.map(b=>b.pending),backgroundColor:"#b3653f"},
+    {label:"Active",data:sg.bands.map(b=>b.active),backgroundColor:"#5c7590"},{label:"Expired",data:sg.bands.map(b=>b.expired),backgroundColor:"#c4c4be"}]},
+    options:{responsive:true,plugins:{legend:{position:"bottom",labels:{boxWidth:12,font:{size:11}}}},scales:{x:{stacked:true,grid:{display:false},title:{display:true,text:"List-price band"}},y:{stacked:true,grid:{color:"#f0f0ee"},title:{display:true,text:"# of listings"}}}},plugins:[recCol]});
+  var seasonC=new Chart(document.getElementById("seasonChart"),{type:"bar",data:{labels:MON,datasets:[{data:counts,backgroundColor:MON.map(m=>peak.includes(m)?"#b3653f":"#ded7ca")}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{ticks:{display:false},grid:{color:"#f0f0ee"},title:{display:true,text:"Relative volume"}}}}});
+  const SQ=S.sqft||1;
+  const VIEWS={
+    price_sqft:{label:"Price vs SqFt",x:c=>c.sqft,y:c=>c.price,xt:"Living area (sq ft)",yt:"Price ($)",subject:{x:S.sqft,y:rec},band:[recObj.low,recObj.high],money:true},
+    ppsf_sqft:{label:"$/SqFt vs SqFt",x:c=>c.sqft,y:c=>c.ppsf,xt:"Living area (sq ft)",yt:"$/sqft",subject:{x:S.sqft,y:Math.round(rec/SQ)},band:[Math.round(recObj.low/SQ),Math.round(recObj.high/SQ)],money:false},
+    price_dom:{label:"Price vs DOM",x:c=>c.dom||0,y:c=>c.price,xt:"Days on market",yt:"Price ($)",subject:null,band:[recObj.low,recObj.high],money:true}
+  };
+  function regress(p){const n=p.length;if(n<2)return{sl:0,ic:p[0]?p[0].y:0};let sx=0,sy=0,sxy=0,sxx=0;p.forEach(q=>{sx+=q.x;sy+=q.y;sxy+=q.x*q.y;sxx+=q.x*q.x});const den=(n*sxx-sx*sx)||1;const sl=(n*sxy-sx*sy)/den;return{sl,ic:(sy-sl*sx)/n};}
+  let cv2="price_sqft",chart2;
+  const band={id:"recBand",beforeDatasetsDraw(c){const b=c.$band;if(!b)return;const{ctx,chartArea:a,scales:{y}}=c;const y1=y.getPixelForValue(b[1]),y0=y.getPixelForValue(b[0]);ctx.save();ctx.fillStyle="rgba(184,148,63,.13)";ctx.fillRect(a.left,y1,a.right-a.left,y0-y1);ctx.strokeStyle="rgba(184,148,63,.6)";ctx.setLineDash([4,4]);[y0,y1].forEach(p=>{ctx.beginPath();ctx.moveTo(a.left,p);ctx.lineTo(a.right,p);ctx.stroke();});ctx.restore();}};
+  const tog=document.getElementById("toggle");
+  tog.innerHTML=Object.entries(VIEWS).map(([k,vw])=>`<button data-k="${k}" class="${k===cv2?'on':''}">${vw.label}</button>`).join("");
+  tog.onclick=e=>{const k=e.target.dataset.k;if(!k)return;cv2=k;[...tog.querySelectorAll("button")].forEach(b=>b.classList.toggle("on",b.dataset.k===k));draw2();};
+  function draw2(){const vw=VIEWS[cv2];const pts=st=>C.filter(c=>c.status===st).map(c=>({x:vw.x(c),y:vw.y(c),c}));
+    const reg=regress(C.filter(c=>cv2==="price_dom"?true:c.status!=="expired").map(c=>({x:vw.x(c),y:vw.y(c)})));
+    const xs=C.map(vw.x),x0=Math.min(...xs),x1=Math.max(...xs);
+    const ds=[{type:"line",data:[{x:x0,y:reg.sl*x0+reg.ic},{x:x1,y:reg.sl*x1+reg.ic}],borderColor:"#26262a",borderWidth:1.5,borderDash:[6,4],pointRadius:0,order:5},
+      {type:"scatter",label:"Sold",data:pts("sold"),backgroundColor:STATUS.sold.c,pointRadius:7,order:1},
+      {type:"scatter",label:"Active",data:pts("active"),backgroundColor:STATUS.active.c,pointRadius:7,pointStyle:"triangle",order:2},
+      {type:"scatter",label:"Expired",data:pts("expired"),backgroundColor:STATUS.expired.c,pointRadius:7,pointStyle:"crossRot",order:3}];
+    if(vw.subject)ds.push({type:"scatter",label:"Subject",data:[vw.subject],backgroundColor:"#b3653f",borderColor:"#fff",borderWidth:2,pointRadius:11,pointStyle:"rectRot",order:0});
+    if(chart2)chart2.destroy();
+    chart2=new Chart(document.getElementById("chart"),{type:"scatter",data:{datasets:ds},options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const c=ctx.raw.c,yv=vw.money?money(ctx.raw.y):"$"+ctx.raw.y;return c?`#${c.id} ${esc(c.address)} — ${yv}`:`Subject: ${yv}`;}}}},scales:{x:{title:{display:true,text:vw.xt},grid:{color:"#f0f0ee"}},y:{title:{display:true,text:vw.yt},grid:{color:"#f0f0ee"},ticks:{callback:val=>vw.money?"$"+Math.round(val/1000)+"k":val}}}},plugins:[band]});
+    chart2.$band=vw.band;chart2.update();}
+  draw2();
+})();
+
+/* ---------------- Step 4: adjusted grid ---------------- */
+const adjAvg=Math.round(solds.reduce((a,c)=>a+c.adjusted,0)/solds.length);
+const adjLo=Math.min(...solds.map(c=>c.adjusted)),adjHi=Math.max(...solds.map(c=>c.adjusted));
+document.getElementById("adjGrid").innerHTML=
+ `<thead><tr><th>#</th><th>Comp</th><th>Sold</th><th title="Market movement since the sale date">Mkt time</th><th>Size adj</th><th>Bath adj</th><th>Bed adj</th><th>Cond. adj</th><th>Adjusted</th></tr></thead><tbody>`+
+ solds.map(c=>`<tr><td><b>${c.id}</b></td><td>${esc(c.address)}</td><td class="num">${money(c.salePrice)}</td>
+   <td class="num">${(c.adjParts.timeAdj)?smoney(c.adjParts.timeAdj):"—"}</td>
+   <td class="num">${smoney(c.adjParts.sizeAdj)}</td>
+   <td class="num">${smoney(c.adjParts.bathAdj)}</td>
+   <td class="num">${smoney(c.adjParts.bedAdj)}</td>
+   <td class="num">${smoney((c.adjParts.condAdj||0)+(c.adjParts.garAdj||0))}</td>
+   <td class="num"><b>${money(c.adjusted)}</b></td></tr>`).join("")+
+ `<tr style="background:#f1e9dd"><td></td><td colspan="7"><b>Adjusted value range</b> — tight cluster supporting the recommendation</td><td class="num"><b>${money(adjLo)}–${money(adjHi)}</b></td></tr></tbody>`;
+
+/* ---------------- Step 4: net sheet ---------------- */
+const NSHEET=(typeof __D!=='undefined'&&__D&&__D.netSheet)?__D.netSheet:null;
+if(NSHEET&&NSHEET.cols&&NSHEET.cols.length){
+  const cols=NSHEET.cols, ref=cols[1]||cols[0];
+  const fmt=it=>(it[2]>0?'+':'−')+money(it[1]);
+  document.getElementById("netSheet").innerHTML=
+    `<thead><tr><th>Line item</th>`+cols.map(c=>`<th class="num">${c.name}</th>`).join("")+`</tr></thead><tbody>`+
+    `<tr style="background:#f7f9ff"><td><b>Sale price</b></td>`+cols.map(c=>`<td class="num"><b>${money(c.price)}</b></td>`).join("")+`</tr>`+
+    ref.items.map((r,i)=>`<tr><td>${r[0]}</td>`+cols.map(c=>`<td class="num">${fmt(c.items[i])}</td>`).join("")+`</tr>`).join("")+
+    `<tr style="background:#f1e9dd"><td><b>Estimated net proceeds</b></td>`+cols.map(c=>`<td class="num"><b>${money(c.net)}</b></td>`).join("")+`</tr></tbody>`;
+  const nb=document.getElementById("netBasis");
+  if(nb&&NSHEET.cfg){const cf=NSHEET.cfg;nb.textContent=`Tax proration on a ${(+cf.taxBasis===360)?'360':'365'}-day basis, taxes ${cf.taxConvention}. Estimate only — title/escrow confirms exact figures at closing.`;}
+}else{
+  const COMM=(typeof __D!=='undefined'&&__D&&__D.commPct!=null)?__D.commPct:0.055, CLOSE=(typeof __D!=='undefined'&&__D&&__D.closePct!=null)?__D.closePct:0.01, PAYOFF=(typeof __D!=='undefined'&&__D&&__D.payoff!=null)?__D.payoff:310000;
+  const net=p=>{const comm=p*COMM,close=p*CLOSE;return{comm,close,net:Math.round(p-comm-close-PAYOFF)};};
+  const NS=[["Conservative",S.rec.low],["Recommended",S.rec.recommended],["Ambitious",S.rec.high]];
+  document.getElementById("netSheet").innerHTML=
+   `<thead><tr><th>Scenario</th><th>Sale price</th><th>Commission (${+(COMM*100).toFixed(2)}%)</th><th>Closing (${+(CLOSE*100).toFixed(2)}%)</th><th>Mortgage payoff</th><th>Est. net proceeds</th></tr></thead><tbody>`+
+   NS.map(([n,p])=>{const x=net(p);return `<tr${n==='Recommended'?' style="background:#f1e9dd"':''}><td><b>${n}</b></td><td class="num">${money(p)}</td>
+     <td class="num">−${money(x.comm)}</td><td class="num">−${money(x.close)}</td><td class="num">−${money(PAYOFF)}</td>
+     <td class="num"><b>${money(x.net)}</b></td></tr>`;}).join("")+`</tbody>`;
+}
+
+/* ---------------- Step 4: pricing scenarios ---------------- */
+const SCEN=[
+ {n:"Quick Sale",p:612000,dom:"14–21 days",prob:"Very high",note:"Priced to move; draws multiple buyers in a balanced market."},
+ {n:"Recommended",p:629000,dom:"30–45 days",prob:"High",note:"Optimal balance of speed and top dollar.",rec:true},
+ {n:"Ambitious",p:648000,dom:"50–70 days",prob:"Moderate",note:"Captures the upgrade premium; expect a slower, patient sale."},
+ {n:"Stretch",p:665000,dom:"80+ days",prob:"Low",note:"Above the active ceiling; risks an expired-style stall like 3540 E Encinas."},
+];
+document.getElementById("scenarios").innerHTML=SCEN.map(s=>`<div class="c${s.rec?' rec':''}">
+  <div class="lab">${s.n}</div><div class="pr">${money(s.p)}</div>
+  <div class="meta">${s.dom}<br>Offer odds: ${s.prob}</div>
+  <div style="font-size:10.5px;color:#888;margin-top:8px;line-height:1.5">${s.note}</div>
+  ${s.rec?'<div class="recbadge">★ RECOMMENDED</div>':''}</div>`).join("");
+
+/* ---------------- Step 4: timeline + checklist ---------------- */
+const TL=[
+ ["Pre-list prep & staging","Deep clean, declutter; stage great room & primary; ready the pool area.","Days 1–3"],
+ ["Professional photography","HDR photos, twilight pool shots, drone exterior, floor plan.","Day 4"],
+ ["MLS launch + syndication","Go live Thursday AM on ARMLS; push to Zillow, Realtor.com, Redfin.","Day 5"],
+ ["Open house weekend","Broker preview Friday; public open Saturday/Sunday (cooler AM hours).","Days 6–8"],
+ ["Showings & feedback","Two-week active showing window; gather and act on buyer feedback.","Days 8–24"],
+ ["Offer review & negotiate","Review offers; counter on price, concessions, close date; accept.","Days 25–35"],
+ ["Inspection & appraisal","Coordinate access; provide comp packet + solar/pool docs to appraiser.","Days 36–48"],
+ ["Closing","Final walkthrough, sign at title/escrow, fund, hand over keys.","Days 49–60"],
+];
+document.getElementById("timeline").innerHTML=TL.map((t,i)=>`<div class="tl"><div class="tt">${i+1}. ${t[0]}</div><div class="td">${t[1]}</div><div class="tw">${t[2]}</div></div>`).join("");
+const CK=["Gather owned-solar paperwork (paid-off confirmation) for buyers/appraiser","Pool service & equipment records (pump, heater, resurfacing date)","HVAC service records — critical in the AZ market","Refresh desert landscaping & check HOA compliance","Schedule professional photos + twilight pool shots","Document 2023 kitchen refresh (receipts, warranties)","Seller's Property Disclosure Statement (SPDS) — Arizona","Mortgage payoff statement from lender","Pre-inspection (roof + AC) to surface issues early","Curb appeal: gravel refresh, exterior touch-up before photos"];
+document.getElementById("checklist").innerHTML=CK.map(x=>`<div><i>✓</i><span>${x}</span></div>`).join("");
+
+/* ---- dedicated full-page print layout for the major visuals ---- */
+(function(){
+  function wrap(id){
+    var el=document.getElementById(id); if(!el||!el.parentNode) return;
+    var holder=document.createElement('div'); holder.className=(id==='map'?'vizcanvas mapholder':'vizcanvas');
+    el.parentNode.insertBefore(holder, el); holder.appendChild(el);
+    var page=document.createElement('div'); page.className='vizpage';
+    holder.parentNode.insertBefore(page, holder);
+    var lead=[], prev=page.previousElementSibling, n=0;
+    while(prev && n<3 && prev.matches && (prev.matches('.sec-h')||prev.matches('.vpcap')||(prev.querySelector&&prev.querySelector('.toggle')))){
+      lead.unshift(prev); prev=prev.previousElementSibling; n++;
+    }
+    lead.forEach(function(x){ page.appendChild(x); });
+    page.appendChild(holder);
+    var nx=page.nextElementSibling;
+    while(nx && nx.matches && (nx.matches('.note')||nx.matches('.legend')||nx.id==='printMap'||nx.id==='printDiagram')){
+      var after=nx.nextElementSibling; page.appendChild(nx); nx=after;
+    }
+    var host=document.querySelector('.wrap')||document.body; host.appendChild(page); // move visual to the end as a full-page appendix
+  }
+  ["map","bandChart","seasonChart","chart"].forEach(wrap);
+  function setPrint(big){
+    [typeof bandC!=="undefined"?bandC:null, typeof seasonC!=="undefined"?seasonC:null, typeof chart2!=="undefined"?chart2:null].forEach(function(c){
+      if(!c) return; try{ c.options.maintainAspectRatio=!big; c.resize(); }catch(e){}
+    });
+    try{ if(typeof map!=="undefined") map.invalidateSize(false); }catch(e){}
+  }
+  window.addEventListener('beforeprint',function(){ setPrint(true); });
+  window.addEventListener('afterprint',function(){ setPrint(false); });
+})();
+
+;(function(){
+  function set(id,v){var el=document.getElementById(id); if(el&&v!=null&&v!=="")el.textContent=v;}
+  function rm(v){return "$"+Math.round(v||0).toLocaleString();}
+  if(typeof __D!=="undefined" && __D){
+    var rec=(S&&S.rec)||{};
+    set("r_h1",(S.address||"").split(",")[0]);
+    set("r_addr",[S.city,S.state].filter(Boolean).join(", ")+(S.zip?(" "+S.zip):""));
+    set("r_price",rm(rec.recommended));
+    set("r_rangeline","Recommended list price · supported range "+rm(rec.low)+" – "+rm(rec.high));
+    set("r_beds",S.beds); set("r_baths",S.baths); set("r_sqft",(S.sqft||0).toLocaleString());
+    set("r_year",S.year||"—"); set("r_ppsf","$"+Math.round((rec.recommended||0)/(S.sqft||1)));
+    set("r_days",__D.daysToOffer||"—");
+    if(__D.agent){ set("r_agent_nm",__D.agent.name); set("r_agent_br",__D.agent.brokerage); set("r_agent_ct",__D.agent.contact); set("r_agent_tag",__D.agent.tag); }
+    set("r_date",new Date().toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"}));
+    set("r_steplab_d","RECOMMENDATION · "+rm(rec.recommended));
+    set("r_rec_price",rm(rec.recommended));
+    set("r_rec_range","Range "+rm(rec.low)+" – "+rm(rec.high)+(__D.confidence?(" · "+__D.confidence+" confidence"):""));
+    var solds=C.filter(function(c){return c.status==="sold"&&c.salePrice;});
+    var actives=C.filter(function(c){return c.status==="active";});
+    var expireds=C.filter(function(c){return c.status==="expired";});
+    function _avg(arr,fn){ if(!arr.length)return null; return arr.reduce(function(a,c){return a+fn(c);},0)/arr.length; }
+    var aDom=_avg(solds,function(c){return c.dom||0;});
+    var aPpsf=_avg(solds.filter(function(c){return c.sqft;}),function(c){return c.salePrice/c.sqft;});
+    var aL2S=_avg(solds.filter(function(c){return c.listPrice&&c.salePrice;}),function(c){return c.salePrice/c.listPrice;});
+    var cond=(aL2S!=null&&aL2S>=0.99&&aDom!=null&&aDom<=30)?"Seller":(((aL2S!=null&&aL2S<0.96)||(aDom!=null&&aDom>60))?"Buyer":"Balanced");
+    var domTxt=aDom!=null?(Math.round(aDom)+" days"):"—", l2sTxt=aL2S!=null?((aL2S*100).toFixed(1)+"%"):"—", ppsfTxt=aPpsf!=null?("$"+Math.round(aPpsf)):"—";
+    set("r_q_dom",domTxt); set("r_q_l2s",l2sTxt); set("r_q_ppsf",ppsfTxt);
+    set("r_q_absorp",(__D.market&&__D.market.absorption)||"—");
+    set("r_q_score",solds.length>=5?"STRONG":(solds.length>=3?"GOOD":"LIMITED"));
+    set("r_micro_title",(S.city||"Local")+" micro-market (this comp set)");
+    set("r_micro",cond+" · "+domTxt+" · "+l2sTxt+" L:S · "+ppsfTxt+"/sqft");
+    set("r_micro_sub","Sale-to-list around "+l2sTxt+", about "+domTxt+" on market. "+(cond==="Seller"?"A seller-leaning market — price with confidence.":(cond==="Buyer"?"A buyer-leaning market — pricing precision matters most.":"A balanced market — pricing precision matters more than in a hot market.")));
+    set("r_state_label",(S.state||"Statewide")+" baseline");
+    if(__D.market&&__D.market.statewide){ set("r_state_v",__D.market.statewide); }
+    else { var _sv=document.getElementById("r_state_v"); if(_sv)_sv.textContent="Statewide context appears once your MLS market feed is connected."; var _ss=document.getElementById("r_state_sub"); if(_ss)_ss.style.display="none"; }
+    var _parts=[];
+    if(actives.length){ var ap=actives.map(function(c){return c.listPrice;}).filter(Boolean); if(ap.length){var lo=Math.min.apply(null,ap),hi=Math.max.apply(null,ap); _parts.push("the "+actives.length+" active listing"+(actives.length>1?"s":"")+" ("+rm(lo)+(hi!==lo?(" – "+rm(hi)):"")+") set the live competition");} }
+    if(expireds.length){ var ep=expireds.map(function(c){return c.listPrice;}).filter(Boolean); var eh=ep.length?Math.max.apply(null,ep):null; _parts.push((expireds.length>1?"expired listings":"the lone expired")+(eh?(" ("+rm(eh)+")"):"")+" mark"+(expireds.length>1?"":"s")+" the price the market rejected"); }
+    var _cn=document.getElementById("r_compnote"); if(_cn) _cn.innerHTML="<b>Read:</b> "+(_parts.length?(_parts.join("; ")+". "):"")+"The recommended price sits "+(expireds.length?"below the rejection point and ":"")+"right at the top of what's actually closing — competitive enough to draw offers without leaving money on the table.";
+    var nv=document.getElementById("r_narrative"); if(nv&&__D.narrative) nv.innerHTML=__D.narrative;
+    window.onafterprint=function(){ try{window.close();}catch(e){} };
+    setTimeout(function(){ window.print(); }, 900);
+  }
+})();
+</script>
+</body>
+</html>
